@@ -2,17 +2,35 @@ package controllers
 
 import (
 	"context"
+	"encoding/json"
+	"net/http"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-const connectionString = "mongodb://localhost:27017"
+type User struct {
+	Name       string `json:"name"`
+	locationId string
+}
 
-var collection *mongo.Collection
+type Location struct {
+	Name string
+}
 
-func initMongoClient() {
-	clientOption := options.Client().ApplyURI(connectionString)
+const userCollectionName = "collection1"
 
-	mongo.Connect(context.TODO(), clientOption)
+type UserController struct {
+	mongoDatabase *mongo.Database
+}
+
+func (c *UserController) ServeUser(w http.ResponseWriter, r *http.Request) {
+
+	findResult := c.mongoDatabase.Collection(userCollectionName).FindOne(context.Background(), bson.M{"myField": "Alex"})
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	json.NewEncoder(w).Encode(findResult)
+}
+
+func NewUserController(mongoDatabase *mongo.Database) *UserController {
+	return &UserController{mongoDatabase}
 }
