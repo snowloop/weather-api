@@ -3,15 +3,14 @@ package controllers
 import (
 	"encoding/json"
 	"net/http"
-	"strings"
 	weather_api_service "weather-api/src/services"
+
+	"github.com/gorilla/mux"
 )
 
 func ServeWeather(w http.ResponseWriter, r *http.Request) {
-
-	city := strings.SplitN(r.URL.Path, "/", 3)[2]
-
-	apiResponse, err := weather_api_service.GetWeatherFromCity(city)
+	requestParams := mux.Vars(r)
+	apiResponse, err := weather_api_service.GetWeatherFromCity(requestParams["cityName"])
 
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)

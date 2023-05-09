@@ -12,7 +12,7 @@ import (
 )
 
 type apiConfigData struct {
-	OpenWeatherApiKey     string `json:"OpenWeatherApiKey`
+	OpenWeatherApiKey     string `json:"OpenWeatherApiKey"`
 	MongoConnectionString string `json:"MongoConnectionString"`
 	DatabaseName          string `json:"DatabaseName"`
 }
