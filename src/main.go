@@ -2,11 +2,10 @@ package main
 
 import (
 	"context"
-	"net/http"
 	"weather-api/src/controllers"
 	api_utils "weather-api/src/utils"
 
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -26,14 +25,11 @@ func main() {
 	userController := controllers.NewUserController(mongoDatabase)
 
 	// Creating the mux router
-	router := mux.NewRouter()
-	router.HandleFunc("/", controllers.ServeHome).Methods("GET")
-	router.HandleFunc("/weather/{cityName}", controllers.ServeWeather).Methods("GET")
-	router.HandleFunc("/user/weather/{userName}", userController.ServeUserWeather).Methods("GET")
-	router.HandleFunc("/user/{userName}", userController.ServeUser).Methods("GET")
+	router := gin.Default()
+	router.GET("", controllers.ServeHome)
+	router.GET("/weathers/:cityName", controllers.ServeWeather)
+	router.GET("/users/weather/:userName", userController.ServeUserWeather)
+	router.GET("/users/:userName", userController.ServeUser)
 
-	http.Handle("/", router)
-
-	// Serving the router
-	http.ListenAndServe(":8080", nil)
+	router.Run()
 }

@@ -5,18 +5,18 @@ import (
 	"net/http"
 	weather_api_service "weather-api/src/services"
 
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
 )
 
-func ServeWeather(w http.ResponseWriter, r *http.Request) {
-	requestParams := mux.Vars(r)
-	apiResponse, err := weather_api_service.GetWeatherFromCity(requestParams["cityName"])
+func ServeWeather(gin_context *gin.Context) {
+	cityName := gin_context.Param("cityName")
+	apiResponse, err := weather_api_service.GetWeatherFromCity(cityName)
 
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(gin_context.Writer, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	json.NewEncoder(w).Encode(apiResponse)
+	gin_context.Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
+	json.NewEncoder(gin_context.Writer).Encode(apiResponse)
 }

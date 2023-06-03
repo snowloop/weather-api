@@ -7,7 +7,7 @@ import (
 	"net/http"
 	weather_api_service "weather-api/src/services"
 
-	"github.com/gorilla/mux"
+	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -27,24 +27,24 @@ func NewUserController(mongoDatabase *mongo.Database) *UserController {
 	return &UserController{mongoDatabase.Collection(userCollectionName)}
 }
 
-func (c *UserController) ServeUser(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	requestParams := mux.Vars(r)
+func (c *UserController) ServeUser(gin_context *gin.Context) {
+	gin_context.Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
+	user_name := gin_context.Param("userName")
 	var foundedUser User
 	findResult := c.collection.FindOne(context.Background(),
-		bson.M{"name": requestParams["userName"]})
+		bson.M{"name": user_name})
 
 	err := findResult.Decode(&foundedUser)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			http.Error(w, err.Error(), http.StatusNotFound)
+			http.Error(gin_context.Writer, err.Error(), http.StatusNotFound)
 			return
 
 		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(gin_context.Writer, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	json.NewEncoder(w).Encode(foundedUser)
+	json.NewEncoder(gin_context.Writer).Encode(foundedUser)
 }
 
 type WeatherUser struct {
@@ -52,20 +52,20 @@ type WeatherUser struct {
 	Weather weather_api_service.WeatherData `json:"weather"`
 }
 
-func (c *UserController) ServeUserWeather(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	userName := mux.Vars(r)["userName"]
+func (c *UserController) ServeUserWeather(gin_context *gin.Context) {
+	gin_context.Writer.Header().Set("Content-Type", "application/json; charset=utf-8")
+	userName := gin_context.Param("userName")
 	fmt.Print(userName)
 	var foundedUser User
 
 	err := c.collection.FindOne(context.Background(), bson.M{"name": userName}).Decode(&foundedUser)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
-			http.Error(w, err.Error(), http.StatusNotFound)
+			http.Error(gin_context.Writer, err.Error(), http.StatusNotFound)
 			return
 
 		}
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(gin_context.Writer, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	fmt.Print("ici")
@@ -73,10 +73,10 @@ func (c *UserController) ServeUserWeather(w http.ResponseWriter, r *http.Request
 	userWeather, err := weather_api_service.GetWeatherFromCity(foundedUser.Location)
 
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(gin_context.Writer, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	json.NewEncoder(w).Encode(WeatherUser{User: foundedUser, Weather: userWeather})
+	json.NewEncoder(gin_context.Writer).Encode(WeatherUser{User: foundedUser, Weather: userWeather})
 
 }
